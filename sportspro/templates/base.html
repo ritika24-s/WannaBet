@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+    <head>
+      {% if title %}
+      <title>{{ title }} - Microblog</title>
+      {% else %}
+      <title>Welcome to 888 Spectate Sports</title>
+      {% endif %}
+    </head>
+    <body>
+        <div> 
+          <a href="url_for('index')">Home</a>
+          <a href="url_for('login')">Login</a>
+          <a href="url_for('sports')">Sports</a>
+          <a href="url_for('search')">Search</a>
+        </div>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>

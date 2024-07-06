@@ -1,0 +1,535 @@
+Log in
+Try Confluence for free
+Senior Python Technical Test
+
+Owned by Andrea Aversa
+
+Last updated: Jun 18, 2024
+REST Application
+Implement a simple Python REST API which manages multiple sports, events and selections, knowing that:
+System Requirements
+Examples of searches:
+NOTES:
+REST Application
+888Spectate consists of a sportsbook product which is responsible for managing sports, events and selections. 
+
+The below screenshot illustrates how sports, events and selections are displayed (reference only, no need to implement a GUI):
+
+Open python_test.png
+python_test.png
+
+
+
+Implement a simple Python REST API which manages multiple sports, events and selections, knowing that:
+
+
+
+
+
+A sport contains the following elements:
+
+Name
+
+Slug (url friendly version of name)
+
+Active (either true or false)
+
+An event contains the following elements:
+
+Name (for simplicity format of the name should always be "team_1 vs team_2")
+
+Slug (url friendly version of name)
+
+Active (Either true or false)
+
+Type (Either preplay or inplay)
+
+Sport
+
+Status (Pending, Started, Ended or Cancelled)
+
+Scheduled start (UTC datetime)
+
+Actual start (created at the time the event has the status changed to "Started")
+
+Logos (explained in the System Requirements below)
+
+A selection contains the following elements:
+
+Name
+
+Event
+
+Price (Decimal value, to 2 decimal places)
+
+Active (Either true or false)
+
+Outcome (Unsettled, Void, Lose or Win)
+
+
+
+
+The elements above are required; additional ones can be added.
+
+
+
+
+System Requirements
+Please follow the provided OpenAPI document, which outlines the minimum viable product for the application.
+
+Additional features / endpoints may be added.
+
+spectate_rest_app_OAS.yml
+
+REST API demonstrating the following functionalities:
+
+Creating sports, events or selections
+
+Updating sports, events or selections
+
+Searching for sports, events or selections
+
+The system should be able to combine N filters with an AND expression
+
+Filters may be more or less complex
+
+A sport may have multiple events
+
+An event may have multiple selections
+
+When all the selections of a particular event are inactive, the event becomes inactive
+
+When all the events of a sport are inactive, the sport becomes inactive
+
+Sports, events and selections need to be persistently stored (SQLite is allowed)
+
+
+When creating an event the "Logos" property of the event must be populated with logos links related to the teams participating in the event.
+Links are available via a third party free API documented here https://www.thesportsdb.com/free_sports_api .
+The endpoint is www.thesportsdb.com/api/v1/json/3/searchteams.php?t=<QUERY> (Search for team by name) and the relevant key in the response is strLogo.
+Example:
+event name: "Arsenal vs Leeds";
+requests to thesportsdb service: GET www.thesportsdb.com/api/v1/json/3/searchteams.php?t=Arsenal and GET www.thesportsdb.com/api/v1/json/3/searchteams.php?t=Leeds;
+format of the stored data in Logos: link_1|link_2 ;
+if one of the links is not found, then use an empty string for the missing link:  ""|link_2 or link_1|"" .
+If no link is found at all, then store the null value.
+N.B.
+You can assume that a successful response is always correct, so if there are multiple records in the body always refer to the first one.
+If, for any reason, the system is unable to get a successful response, the failure must be logged (optionally with a reason).
+
+Examples of searches:
+sports/events/selections with a name satisfying a particular regex
+
+sports/events with a minimum number of active (events/selections) higher than a threshold
+
+Events scheduled to start in a specific timeframe for a specific timezone
+
+NOTES:
+Please provide the source code for the solution on GitHub.
+
+Please provide a functioning solution using docker/docker-compose for ease of evaluation.
+
+Candidate must submit solution using Python.
+
+Solution may be implemented using Tornado, Flask, FastAPI, Sanic or no framework at all.
+
+Persistence level operations (i.e. MySQL, SQLite, PostgreSQL, etc.) MUST BE raw (i.e. models definition / creation is allowed, ORMs are not).
+
+
+Please add relevant unit tests.
+
+Anything not specified is optional and up to the candidate (i.e. caching, additional API endpoints, etc)
+
+
+
+
+
+
+
+Open 888spectatelogo.png
+888spectatelogo.png
+
+
+
+
+
+
+
+POWERED BY
+
+spectate_rest_app_OAS.yml
+yaml · 9 KB
+
+swagger: "2.0"
+info:
+  description: "Simple CRUD sportsbook application"
+  version: "1.0.0"
+  title: "Spectate REST App"
+paths:
+  /sport:
+    post:
+      tags:
+      - "Sport"
+      summary: "Create a new sport"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Sport creation fields"
+        required: true
+        schema:
+          $ref: "#/definitions/CreateSportRequest"
+      responses:
+        201:
+          description: "Sport ID"
+          schema:
+            type: integer
+            example: {"id": 5}
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /sport/{sport_id}:
+    patch:
+      tags:
+      - "Sport"
+      summary: "Update a sport"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "sport_id"
+        in: "path"
+        description: "Sport ID"
+        type: integer
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Sport update fields"
+        required: true
+        schema:
+          $ref: "#/definitions/UpdateSportRequest"
+      responses:
+        200:
+          description: "Sport ID"
+          schema:
+            type: integer
+            example: {"id": 5}
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /sport/search:
+    post:
+      tags:
+      - "Sport"
+      summary: "Search sports"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Sport search fields"
+        required: true
+        schema:
+          $ref: "#/definitions/SearchSportRequest"
+      responses:
+        200:
+          description: "List of sports"
+          schema:
+            $ref: "#/definitions/SearchSportResponse"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /event:
+    post:
+      tags:
+      - "Event"
+      summary: "Create a new event"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Event creation fields"
+        required: true
+        schema:
+          $ref: "#/definitions/CreateEventRequest"
+      responses:
+        201:
+          description: "Event ID"
+          schema:
+            type: integer
+            example: {"id": 5}
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /event/{event_id}:
+    patch:
+      tags:
+      - "Event"
+      summary: "Update an event"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "event_id"
+        in: "path"
+        description: "Event ID"
+        type: integer
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Event update fields"
+        required: true
+        schema:
+          $ref: "#/definitions/UpdateEventRequest"
+      responses:
+        200:
+          description: "Event ID"
+          schema:
+            type: integer
+            example: {"id": 5}
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /event/search:
+    post:
+      tags:
+      - "Event"
+      summary: "Search events"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Event search fields"
+        required: true
+        schema:
+          $ref: "#/definitions/SearchEventRequest"
+      responses:
+        200:
+          description: "List of events"
+          schema:
+            $ref: "#/definitions/SearchEventResponse"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /selection:
+    post:
+      tags:
+      - "Selection"
+      summary: "Create a new selection"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Selection creation fields"
+        required: true
+        schema:
+          $ref: "#/definitions/CreateSelectionRequest"
+      responses:
+        201:
+          description: "Selection ID"
+          schema:
+            type: integer
+            example: {"id": 5}
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /selection/{selection_id}:
+    patch:
+      tags:
+      - "Selection"
+      summary: "Update a selection"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "selection_id"
+        in: "path"
+        description: "Selection ID"
+        type: integer
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Selection update fields"
+        required: true
+        schema:
+          $ref: "#/definitions/UpdateSelectionRequest"
+      responses:
+        200:
+          description: "Selection ID"
+          schema:
+            type: integer
+            example: {"id": 5}
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+  /selection/search:
+    post:
+      tags:
+      - "Selection"
+      summary: "Search selections"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Selection search fields"
+        required: true
+        schema:
+          $ref: "#/definitions/SearchSelectionRequest"
+      responses:
+        200:
+          description: "List of selections"
+          schema:
+            $ref: "#/definitions/SearchSelectionResponse"
+        default:
+          description: "Error"
+          schema:
+            $ref: "#/definitions/ErrorMessage"
+definitions:
+  # Models
+  Sport:
+    type: object
+    properties:
+      name:
+        type: string
+      slug:
+        type: string
+      active:
+        type: boolean
+  Event:
+    type: object
+    properties:
+      name:
+        type: string
+      slug:
+        type: string
+      active:
+        type: boolean
+      type:
+        type: string
+      sport:
+        type: string
+      status:
+        type: string
+        enum:
+        - "PENDING"
+        - "STARTED"
+        - "ENDED"
+        - "CANCELLED"
+      scheduled_start:
+        $ref: "#/definitions/DateTime"
+      actual_start:
+        $ref: "#/definitions/DateTime"
+      logos:
+        type: string
+  Selection:
+    type: object
+    properties:
+      name:
+        type: string
+      event:
+        type: string
+      active:
+        type: boolean
+      price:
+        type: "number"
+      outcome:
+        type: string
+        enum:
+        - "UNSETTLED"
+        - "VOID"
+        - "LOSE"
+        - "WIN"
+  ErrorMessage:
+    type: string
+    example: {"error_message": "message"}
+  DateTime:
+    type: string
+    description: "Datetime string"
+  # Requests
+  CreateSportRequest:
+    allOf:
+      - $ref: "#/definitions/Sport"
+      - type: object
+        required:
+          - "name"
+  CreateEventRequest:
+    allOf:
+      - $ref: "#/definitions/Event"
+      - type: object
+        required:
+          - "name"
+          - "type"
+          - "sport"
+          - "status"
+          - "scheduled_start"
+  CreateSelectionRequest:
+    allOf:
+      - $ref: "#/definitions/Selection"
+      - type: object
+        required:
+          - "name"
+          - "event"
+          - "price"
+          - "outcome"
+  UpdateSportRequest:
+    $ref: "#/definitions/Sport"
+  UpdateEventRequest:
+    $ref: "#/definitions/Event"
+  UpdateSelectionRequest:
+    $ref: "#/definitions/Selection"
+  SearchSportRequest:
+    $ref: "#/definitions/Sport"
+  SearchEventRequest:
+    $ref: "#/definitions/Event"
+  SearchSelectionRequest:
+    $ref: "#/definitions/Selection"
+  # Responses
+  SearchSportResponse:
+    type: object
+    properties:
+      sports:
+        type: array
+        items:
+          $ref: "#/definitions/Sport"
+  SearchEventResponse:
+    type: object
+    properties:
+      events:
+        type: array
+        items:
+          $ref: "#/definitions/Event"
+  SearchSelectionResponse:
+    type: object
+    properties:
+      selections:
+        type: array
+        items:
+          $ref: "#/definitions/Selection"
