@@ -1,7 +1,7 @@
 import os
 import traceback
 import mysql.connector
-from mysql.connector import Error
+from mysql.connector import Error, errorcode
 
 from ..config import config_by_name, Config
 from ..utils.logger import setup_logger
@@ -24,7 +24,7 @@ class DB(object):
                 password=self.config.MYSQL_DATABASE_PASSWORD,
                 database=self.config.MYSQL_MASTER_SCHEMA,
                 autocommit=True,
-                ssl_verify_identity=True
+                ssl_verify_identity=self.config.SSL_VERIFY_IDENTITY
             )
             
         except mysql.connector.Error as err:
@@ -107,7 +107,7 @@ class DB(object):
             self.close()
             return results
 
-    def execute_query(self, query):
+    def execute_query(self, query, values=None):
         """
         This function will handle all the insert, update and delete queries
         """
@@ -117,11 +117,18 @@ class DB(object):
         try:
             self.reconnect()
             cursor = self._sql_db.cursor()
-            cursor.execute(query)
+            print(query)
+            cursor.execute(query, values)
+            print(cursor.lastrowid)
             results = cursor.lastrowid
             self._sql_db.commit()
         except mysql.connector.Error as err:
-            setup_logger("Got an error while connecting to the MySQL database -" + str(err))
+            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+                setup_logger("Something is wrong with your user name or password")
+            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+                setup_logger("Database does not exist")
+            else:
+                setup_logger("Got an error while connecting to the MySQL database -" + str(err))
             traceback.print_exc()
         finally:
             # close the cursor and connection

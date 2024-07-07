@@ -9,9 +9,10 @@ class SportsModels(DB):
         pass
 
     def create_sport(self, data):
-        query = f"INSERT INTO sports (name, slug, active) VALUES \
-        ({data['name']}, {data['slug']}, {data['active']})"
-        results = self.execute_query(query=query)
+        query = "INSERT INTO sports (name, slug, active) VALUES (%s, %s, %s);"
+        values = (data['name'], data.get('slug',''), data.get('active', True))
+
+        results = self.execute_query(query=query, values=values)
         return results
     
     def update_sport(self, sport_id, data):
@@ -20,9 +21,19 @@ class SportsModels(DB):
         results = self.execute_query(query=query)
         return results
 
-    def search_sports(self, filters):
+    def search_sports(self, filters, fetchone=False):
         # cursor = self.connection.cursor(dictionary=True)
         results = self.select_data_where(select="*", table="sports",
-                               where=('name LIKE % ' + filters['name'] + 'AND active=', filters['active']),
-                               fetchone=False)
+                               where=filters,
+                               fetchone=fetchone)
+        return results
+    
+    def delete_sport(self, sport_id):
+        results = None
+
+        sport_exists = self.select_data_where(select="id", table="sports", where=f"id={sport_id}",fetchone=True)
+        if sport_exists:
+            query = f"DELETE FROM sports WHERE id={sport_id};"
+            print(query)
+            results = self.execute_query(query=query)
         return results

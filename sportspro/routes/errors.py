@@ -1,22 +1,28 @@
-from flask import render_template
-from sportspro import app
+from flask import jsonify
+from sportspro import create_app
 
+app = create_app()
 
-@app.errorhandler(403)
-def forbidden(e):
-    return render_template('error.html', message='403 forbidden'), 403
-
+@app.errorhandler(400)
+def bad_request_error(error):
+    response = jsonify({'error': 'Bad Request', 'message': str(error)})
+    response.status_code = 400
+    return response
 
 @app.errorhandler(404)
-def page_not_found(e):
-    return render_template('error.html', message='404 not found'), 404
-
-
-@app.errorhandler(410)
-def gone(e):
-    return render_template('error.html', message='410 gone'), 410
-
+def not_found_error(error):
+    response = jsonify({'error': 'Not Found', 'message': str(error)})
+    response.status_code = 404
+    return response
 
 @app.errorhandler(500)
-def internal_error(e):
-    return render_template('error.html', message='500 internal error'), 500
+def internal_server_error(error):
+    response = jsonify({'error': 'Internal Server Error', 'message': str(error)})
+    response.status_code = 500
+    return response
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    response = jsonify({'error': 'Server Error', 'message': str(e)})
+    response.status_code = 500
+    return response

@@ -1,10 +1,12 @@
 from flask import render_template, flash, redirect, Blueprint, url_for, request
-from sportspro import app
+from sportspro import create_app
 
 from ..forms import LoginForm
 # from .events import events_bp
 # from .selections import selections_bp
 # from .sports import sports_bp
+
+app = create_app()
 
 @app.route('/')
 def home():

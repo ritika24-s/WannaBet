@@ -2,3 +2,6 @@ flask_venv/
 __pycache__/
 .pytest_cache/
 logs/
+sportspro/.env
+.env
+/.env

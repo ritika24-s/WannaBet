@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify
 
-from sportspro import app
+# from sportspro import app
 
 from .views import EventsViews
 from ..utils.logger import setup_logger

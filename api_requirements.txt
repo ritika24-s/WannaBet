@@ -1,0 +1,68 @@
+Thank you for providing the YAML file. Here's a summary of my understanding based on the Swagger (OpenAPI) specification:
+
+### API Overview
+This REST API is designed to manage sports, events, and selections in a sportsbook application. It supports basic CRUD operations and search functionality for each entity.
+
+### Endpoints and Operations
+1. **Sport Endpoints**:
+   - **POST /sport**: Create a new sport.
+   - **PATCH /sport/{sport_id}**: Update an existing sport.
+   - **POST /sport/search**: Search for sports based on specified criteria.
+
+2. **Event Endpoints**:
+   - **POST /event**: Create a new event.
+   - **PATCH /event/{event_id}**: Update an existing event.
+   - **POST /event/search**: Search for events based on specified criteria.
+
+3. **Selection Endpoints**:
+   - **POST /selection**: Create a new selection.
+   - **PATCH /selection/{selection_id}**: Update an existing selection.
+   - **POST /selection/search**: Search for selections based on specified criteria.
+
+### Data Models
+- **Sport**: 
+  - `name`: string
+  - `slug`: string
+  - `active`: boolean
+- **Event**: 
+  - `name`: string
+  - `slug`: string
+  - `active`: boolean
+  - `type`: string
+  - `sport`: string
+  - `status`: string (enum: PENDING, STARTED, ENDED, CANCELLED)
+  - `scheduled_start`: datetime
+  - `actual_start`: datetime
+  - `logos`: string
+- **Selection**:
+  - `name`: string
+  - `event`: string
+  - `active`: boolean
+  - `price`: number
+  - `outcome`: string (enum: UNSETTLED, VOID, LOSE, WIN)
+- **ErrorMessage**: 
+  - `error_message`: string
+
+### Request and Response Models
+- **CreateSportRequest**: Inherits from Sport; `name` is required.
+- **CreateEventRequest**: Inherits from Event; `name`, `type`, `sport`, `status`, and `scheduled_start` are required.
+- **CreateSelectionRequest**: Inherits from Selection; `name`, `event`, `price`, and `outcome` are required.
+- **UpdateSportRequest**: Inherits from Sport.
+- **UpdateEventRequest**: Inherits from Event.
+- **UpdateSelectionRequest**: Inherits from Selection.
+- **SearchSportRequest**: Inherits from Sport.
+- **SearchEventRequest**: Inherits from Event.
+- **SearchSelectionRequest**: Inherits from Selection.
+- **SearchSportResponse**: Contains an array of Sport objects.
+- **SearchEventResponse**: Contains an array of Event objects.
+- **SearchSelectionResponse**: Contains an array of Selection objects.
+
+### Key Considerations
+1. **Event Name Enforcement**: The format "team_1 vs team_2" is enforced for event names.
+2. **Slug Generation**: Need to implement a method for generating URL-friendly slugs.
+3. **Third-Party API Integration**: Fetch team logos from the third-party API, handle failures with logging and user notifications.
+4. **Rate Limiting**: Implement rate limiting at 60 requests per minute.
+5. **Authentication**: Optional login to store selections using API keys.
+6. **Environment Management**: Support for development, staging, and production environments.
+7. **Testing**: Ensure 90% test coverage with Pytest.
+8. **Logging and Monitoring**: Implement detailed logging and monitoring.

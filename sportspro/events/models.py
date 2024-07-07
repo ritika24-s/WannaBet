@@ -1,4 +1,4 @@
-from db import DB
+from ..db import DB
 
 class EventsModels(DB):
     def __init__(self):

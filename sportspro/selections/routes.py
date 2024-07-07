@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify
 
-from sportspro import app
+# from sportspro import app
 from ..utils.logger import setup_logger
 from ..config import config_by_name
 from .views import SelectionsViews
