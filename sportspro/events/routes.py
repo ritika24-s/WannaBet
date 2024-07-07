@@ -1,15 +1,11 @@
 import os
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 
 # from sportspro import app
 
 from .views import EventsViews
-from ..utils.logger import setup_logger
-from ..config import config_by_name
-
-# config = config_by_name[os.getenv('FLASK_ENV', 'development')]
-config = config_by_name["development"]
-logger = setup_logger(config.LOG_LEVEL)
+from ..utils.logger import get_logger
+logger = get_logger("__name__")
 
 # Create a events blueprint
 events_bp = Blueprint('events', __name__, url_prefix="/events")
@@ -19,15 +15,14 @@ event_views = EventsViews()
 @events_bp.route('/', methods=["POST"])
 def create_event():
     try:
-        data = request.get_json()
-        event_id = event_views.create_event(data)
+        event_id = event_views.create_event(request.get_json())
         return jsonify({'id': event_id}), 201
     except Exception as e:
         logger.error(f"Error creating event: {e}")
-        return jsonify({'error': 'Failed to create event'}), 500
+        abort(500, 'Failed to create event')
 
 # Endpoint to update an existing event
-@events_bp.route('/<event_id>', methods=["UPDATE"])
+@events_bp.route('/<event_id>', methods=["PATCH"])
 def update_event(event_id):
     try:
         data = request.get_json()
@@ -35,15 +30,14 @@ def update_event(event_id):
         return jsonify({'id': updated_event_id})
     except Exception as e:
         logger.error(f"Error updating event: {e}")
-        return jsonify({'error': 'Failed to update event'}), 500
+        abort(500, 'Failed to update event')
 
 # Endpoint to search for events based on specified criteria
 @events_bp.route('/search', methods=["POST"])
 def search_particular_sport():
     try:
-        filters = request.get_json()
-        events = event_views.search_events(filters)
-        return jsonify({'events': events})
+        events = event_views.search_events(request.get_json())
+        return jsonify({'events': events}), 200
     except Exception as e:
         logger.error(f"Error searching events: {e}")
         return jsonify({'error': 'Failed to search events'}), 500

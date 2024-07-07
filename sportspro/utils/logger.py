@@ -46,3 +46,14 @@ def setup_logger(name, level="development"):
     logger.addHandler(fh)
 
     return logger
+
+def get_logger(name):
+    from ..config import config_by_name
+    from dotenv import load_dotenv
+
+    basedir = os.path.abspath(os.path.dirname(__name__))
+    load_dotenv(os.path.join(basedir, '.env'))
+    config = config_by_name[os.getenv('FLASK_ENV', 'development')]
+    log_level = config.LOG_LEVEL
+    
+    return setup_logger(name, log_level)

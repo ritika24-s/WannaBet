@@ -21,7 +21,7 @@ def create_new_sport():
         abort(500, str(e))
 
 # Endpoint to update an existing sport
-@sports_bp.route('/<sport_id>', methods=["UPDATE"])
+@sports_bp.route('/<sport_id>', methods=["PATCH"])
 def update_sport(sport_id):
     try:
         status_code, message = sports_views.update_sport(sport_id, request.get_json())

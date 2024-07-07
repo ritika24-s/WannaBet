@@ -3,11 +3,14 @@ import traceback
 import mysql.connector
 from mysql.connector import Error, errorcode
 
-from ..config import config_by_name, Config
+from ..config import config_by_name
 from ..utils.logger import setup_logger
+from dotenv import load_dotenv
 
+basedir = os.path.abspath(os.path.dirname(__name__))
+load_dotenv(os.path.join(basedir, '.env'))
 config = config_by_name[os.getenv('FLASK_ENV', 'development')]
-logger = setup_logger(config.LOG_LEVEL)
+logger = setup_logger(__name__, config.LOG_LEVEL)
 
 class DB(object):
     def __init__(self):

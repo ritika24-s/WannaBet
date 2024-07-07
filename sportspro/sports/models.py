@@ -16,12 +16,13 @@ class SportsModels(DB):
         return results
     
     def update_sport(self, sport_id, data):
-        query = "UPDATE sports SET name=%s, slug=%s, active=%s WHERE id=%s"\
-                %(data['name'], data['slug'], data['active'], sport_id)
-        results = self.execute_query(query=query)
+        query = "UPDATE sports SET name=%s, slug=%s, active=%s WHERE id=%s"
+        values = (data['name'], data['slug'], data['active'], sport_id)
+
+        results = self.execute_query(query=query, values=values)
         return results
 
-    def search_sports(self, filters, fetchone=False):
+    def search_sports(self, filters, fetchone=True):
         # cursor = self.connection.cursor(dictionary=True)
         results = self.select_data_where(select="*", table="sports",
                                where=filters,
@@ -34,6 +35,5 @@ class SportsModels(DB):
         sport_exists = self.select_data_where(select="id", table="sports", where=f"id={sport_id}",fetchone=True)
         if sport_exists:
             query = f"DELETE FROM sports WHERE id={sport_id};"
-            print(query)
             results = self.execute_query(query=query)
         return results
