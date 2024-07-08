@@ -22,23 +22,20 @@ def login():
         return redirect('/index')
     return render_template('login.html', title='Sign In', form=form)
 
-# @app.route('/sports//<path:path>', methods=["GET", "POST", "DELETE", "UPDATE"])
-# def redirect_sports(path):
-#     if request.method == 'POST' and path == 'search':
-#         return redirect(url_for('sports.search_sports'))
-#     elif request.method in ['GET', 'PATCH']:
-#         return redirect(url_for('sports.handle_sport', path=path))
-#     else:
-#         return "Invalid route", 404
 
-# @app.route('/events/', methods=["GET", "POST", "DELETE", "UPDATE"])
-# def events_view():
-#     pass
+# @app.route('/')
+# def home():
+#     return "Welcome to the Sportsbook Home Page"
 
-# @app.route('/selections/', methods=["GET", "POST", "DELETE", "UPDATE"])
-# def selections_view():
-#     pass
+# @app.route('/login')
+# def login():
+#     return "Login Page"
 
+# @app.route('/signup')
+# def signup():
+#     return "Signup Page"
+
+# alternative way to register blueprints in a neater way
 # # Register the other blueprints
 # def register_blueprints(app):
 #     app.register_blueprint(app)

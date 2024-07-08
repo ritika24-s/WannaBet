@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-basedir = os.path.abspath(os.path.dirname(__name__))
+basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 # TOP_LEVEL_DIR = os.path.abspath(os.curdir)
@@ -14,13 +14,11 @@ class Config(object):
     MYSQL_DATABASE_PASSWORD = os.environ.get('MYSQL_DATABASE_PASSWORD')
     MYSQL_MASTER_SCHEMA = os.environ.get('MYSQL_MASTER_SCHEMA', 'dev')
     MYSQL_DATABASE_CHARSET = os.environ.get("MYSQL_DATABASE_CHARSET", "utf-8")
-    SSL_VERIFY_IDENTITY = True
 
 class DevelopmentConfig(Config):
     DEBUG = True
     LOG_LEVEL = 'DEBUG'
     TESTING = True
-    SSL_VERIFY_IDENTITY = False
 
 class StagingConfig(Config):
     DEBUG = False

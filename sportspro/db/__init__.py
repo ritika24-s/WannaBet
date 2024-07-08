@@ -10,12 +10,12 @@ from dotenv import load_dotenv
 basedir = os.path.abspath(os.path.dirname(__name__))
 load_dotenv(os.path.join(basedir, '.env'))
 config = config_by_name[os.getenv('FLASK_ENV', 'development')]
-logger = setup_logger(__name__, config.LOG_LEVEL)
+logger = setup_logger("main_db", os.getenv('FLASK_ENV', 'development'))
 
 class DB(object):
     def __init__(self):
         self.config = config
-        self._sql_db = None
+        # self._sql_db = None
         self.connect()
 
 
@@ -26,8 +26,8 @@ class DB(object):
                 user=self.config.MYSQL_DATABASE_USER,
                 password=self.config.MYSQL_DATABASE_PASSWORD,
                 database=self.config.MYSQL_MASTER_SCHEMA,
-                autocommit=True,
-                ssl_verify_identity=self.config.SSL_VERIFY_IDENTITY
+                autocommit=True
+                # ssl_verify_identity=self.config.SSL_VERIFY_IDENTITY
             )
             
         except mysql.connector.Error as err:
@@ -75,7 +75,7 @@ class DB(object):
             setup_logger(err)
 
     # this function is used to fetch data from any table of mysql with where clause
-    def select_data_where(self, select, table, where, fetchone=False):
+    def select_data_where(self, select, table, where, fetchone=True):
         """
         This function is used to create select where query and fetch results
 
@@ -97,7 +97,7 @@ class DB(object):
             if fetchone:
                 # if only fetching one entry, then limit the data to 1 to optimize the query return
                 cursor.execute(f"select {select} from {table} where {where} LIMIT 1;")
-                results = cursor.fetchone()
+                results = [cursor.fetchone()]
             else:
                 cursor.execute(f"select {select} from {table} where {where};")
                 results = cursor.fetchall()
@@ -110,7 +110,7 @@ class DB(object):
             self.close()
             return results
 
-    def execute_query(self, query, values=None):
+    def execute_query(self, query, values=None, insert=False):
         """
         This function will handle all the insert, update and delete queries
         """
@@ -120,12 +120,17 @@ class DB(object):
         try:
             self.reconnect()
             cursor = self._sql_db.cursor()
-            print(query)
             cursor.execute(query, values)
-            print(cursor.lastrowid)
-            results = cursor.lastrowid
+                   
+            if insert:
+                results = cursor.lastrowid
+            else:
+                results = cursor.rowcount
+            
             self._sql_db.commit()
+
         except mysql.connector.Error as err:
+            self._sql_db.rollback()
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
                 setup_logger("Something is wrong with your user name or password")
             elif err.errno == errorcode.ER_BAD_DB_ERROR:

@@ -1,13 +1,14 @@
 import logging
 import os
 
+# LOG_LEVELS maps the environment names to their respective logging levels
 LOG_LEVELS = {
     "development": logging.DEBUG,
     "staging": logging.INFO,
     "production": logging.WARNING
 }
 
-def setup_logger(name, level="development"):
+def setup_logger(name:str, level:str="development"):
     """
     Sets up a logger with the specified name and log level.
     
@@ -36,7 +37,7 @@ def setup_logger(name, level="development"):
     if not logger.hasHandlers():
         logger.addHandler(ch)
 
-    # Optional: Create a file handler if you want to log to a file
+    # Create a file handler to log to a file
     log_dir = "logs"
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
@@ -47,13 +48,10 @@ def setup_logger(name, level="development"):
 
     return logger
 
-def get_logger(name):
-    from ..config import config_by_name
+def get_logger(name:str):
     from dotenv import load_dotenv
 
-    basedir = os.path.abspath(os.path.dirname(__name__))
-    load_dotenv(os.path.join(basedir, '.env'))
-    config = config_by_name[os.getenv('FLASK_ENV', 'development')]
-    log_level = config.LOG_LEVEL
+    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+    load_dotenv(dotenv_path=env_path)
     
-    return setup_logger(name, log_level)
+    return setup_logger(name, os.getenv('FLASK_ENV', 'development'))

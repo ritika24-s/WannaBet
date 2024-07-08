@@ -1,31 +1,27 @@
 import os
 from flask import Blueprint, request, jsonify
 
-# from sportspro import app
-from ..utils.logger import setup_logger
-from ..config import config_by_name
 from .views import SelectionsViews
+from ..utils.logger import get_logger
 
-config = config_by_name[os.getenv('FLASK_ENV', 'development')]
-logger = setup_logger(config.LOG_LEVEL)
+logger = get_logger(__name__)
 
 # Create a selections blueprint
-selections_bp = Blueprint('selections', __name__, url_prefix='/selections')
+selections_bp = Blueprint('selection', __name__, url_prefix='/selection')
 selection_views = SelectionsViews()
 
 # Endpoint to create a new selection
 @selections_bp.route('/', methods=["POST"])
 def create_selection():
     try:
-        data = request.get_json()
-        selection_id = selection_views.create_selection(data)
+        selection_id = selection_views.create_selection(request.get_json())
         return jsonify({'id': selection_id}), 201
     except Exception as e:
         logger.error(f"Error creating selection: {e}")
         return jsonify({'error': 'Failed to create selection'}), 500
 
 # Endpoint to update an existing selection
-@selections_bp.route('/<selection_id>', methods=["UPDATE"])
+@selections_bp.route('/<int:selection_id>', methods=["UPDATE"])
 def update_selection(selection_id):
     try:
         data = request.get_json()

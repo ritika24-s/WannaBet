@@ -5,10 +5,10 @@ from flask import Blueprint, request, jsonify, abort
 
 from .views import EventsViews
 from ..utils.logger import get_logger
-logger = get_logger("__name__")
+logger = get_logger(__name__)
 
 # Create a events blueprint
-events_bp = Blueprint('events', __name__, url_prefix="/events")
+events_bp = Blueprint('event', __name__, url_prefix="/event")
 event_views = EventsViews()
 
 # Endpoint to create a new event
@@ -22,7 +22,7 @@ def create_event():
         abort(500, 'Failed to create event')
 
 # Endpoint to update an existing event
-@events_bp.route('/<event_id>', methods=["PATCH"])
+@events_bp.route('/<int:event_id>', methods=["PATCH"])
 def update_event(event_id):
     try:
         data = request.get_json()

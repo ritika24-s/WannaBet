@@ -7,8 +7,8 @@ class CreateSchema(DB):
     """
     This class is only to be run manually by admin or during test runs
     """
-    def __init__(self):
-        super().__init__()
+    # def __init__(self):
+    #     super().__init__()
 
     def init_db(self):
         self.reconnect()
