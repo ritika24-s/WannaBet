@@ -113,7 +113,9 @@ class EventsViews:
         if 'scheduled_start_from' in data and 'scheduled_start_to' in data:
             filters += " AND scheduled_start BETWEEN %s AND %s" \
                 % (data['scheduled_start_from'], data['scheduled_start_to'])
-
+            
+        results = self.events_db.search_events(filters=filters, fetchone=False)
+        
         if results:
             return 200, results
         

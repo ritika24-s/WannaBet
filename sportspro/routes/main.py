@@ -10,7 +10,7 @@ app = create_app()
 
 @app.route('/')
 def home():
-    return render_template('index.html', title='Home', user={}, posts={})
+    return render_template('base.html', title='Home', user={}, posts={})
 
 @app.route('/login')
 def login():
