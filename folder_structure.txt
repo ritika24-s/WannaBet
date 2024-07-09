@@ -3,7 +3,6 @@ project-root/
 ├── sportspro/
 │   ├── __init__.py           # Initialization of Flask app
 │   ├── config.py             # Configuration settings (development, staging, production)
-│   ├── .env                  # Environment variables like passwords
 │   │
 │   ├── db/                   # Centre Database related logic
 │   │   ├── __init__.py       # contains centre logic for connecting to main DB
@@ -54,6 +53,7 @@ project-root/
 │
 ├── sports_info.py            # Module to run flask
 ├── config.py                 # Global configuration settings
+├── .env                      # Environment variables like passwords
 ├── requirements.txt          # Python dependencies
 ├── Dockerfile                # Docker configuration for the application
 ├── docker-compose.yml        # Docker Compose configuration

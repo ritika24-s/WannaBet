@@ -18,6 +18,9 @@ EXPOSE 5000
 
 # Define environment variable
 ENV FLASK_APP sports_info.py
+ENV FLASK_ENV "development"
+ENV SECRET_KEY "asdff"
+ENV DEBUG True
 
 # Run sports_info.py when the container launches
 CMD ["flask", "run", "--host=0.0.0.0"]
