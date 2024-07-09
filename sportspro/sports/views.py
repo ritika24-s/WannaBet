@@ -10,7 +10,10 @@ class SportsViews:
         self.sports_db = SportsModels()
 
     def get_sports_list(self):
-        pass
+        """
+        Retrieve a list of all sports.
+        """
+        return self.sports_db.get_sports_list()
     
     def check_sport_exists(self, data):
         """
@@ -75,13 +78,19 @@ class SportsViews:
             return status_code, message
         
         if self.check_sport_exists({"sport_id": sport_id}):
+            if data.get("active") is None:
+                # Check if the sport should be marked as inactive
+                data["active"] = self.sports_db.check_sport_inactive_status(sport_id)
+                
             sport_id = self.sports_db.update_sport(sport_id=sport_id, data=data)
+            
             if sport_id:
                 logger.info("Sport updated with ID: %d", sport_id)
                 return 200, sport_id
             else:
                 logger.error("Failed to update sport ID %d: %s", sport_id, data)
                 return 500, "Something went wrong, check logs"
+        
         else:
             logger.warning("Sport with ID %d not found", sport_id)
             return 404, f"Sport with id {sport_id} not found"

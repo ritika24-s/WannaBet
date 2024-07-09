@@ -85,3 +85,12 @@ def search_particular_sport():
     except Exception as e:
         logger.error(f"Error searching for sports: {e}")
         abort(500, "Internal Server Error")
+
+# Endpoint to get all sports
+@sports_bp.route('/', methods=["GET"])
+def get_all_sports():
+    try:
+        sports = sports_views.get_sports_list()
+        return jsonify({"sports": sports}), 200
+    except Exception as e:
+        abort(500, str(e))

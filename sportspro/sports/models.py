@@ -63,9 +63,9 @@ class SportsModels(DB):
                 logger.info(f"Sport updated successfully: ID {sport_id}")
             else:
                 logger.debug(f"No values returned after trying to update: ID {sport_id}")
+        
         except Exception as e:
             logger.error(f"Error updating sport: {e}")
-        
         finally:
             return results
 
@@ -86,22 +86,16 @@ class SportsModels(DB):
             logger.error(f"Error searching sports: {e}")
         finally:
             return results
-    
+
     def delete_sport(self, field, value):
         """
         Delete a sport from the database based on the provided field and value.
         """
         results = None
         logger.debug(f"Deleting sports with {field}: {value}")
-
+        query = "DELETE FROM sports WHERE %s=%s;"
         try:
-            if field == "name":
-                query = f"DELETE FROM sports WHERE name='{value}';"
-            else:
-                query = f"DELETE FROM sports WHERE id={value};"
-            print(query, field, value)
-            results = self.execute_query(query=query)
-
+            results = self.execute_query(query=query, values=(field, value))
             if results:
                 logger.info(f"Sport deleted successfully with {field}: {value}")
             else:
@@ -111,3 +105,38 @@ class SportsModels(DB):
             logger.error(f"Error deleting sport: {e}")
         finally:
             return results
+
+    def get_sports_list(self):
+        """
+        Retrieve a list of all sports from the database.
+        """
+        logger.debug("Retrieving all sports from the database")
+        results = []
+        try:
+            results = self.select_data_where(select="*", table="sports", where="1=1", fetchone=False)
+            logger.info(f"Found {len(results)} sports in total")
+        except Exception as e:
+            logger.error(f"Error retrieving sports: {e}")
+        finally:
+            return results
+        
+    def check_sport_inactive_status(self, sport_id):
+        """
+        Check if all events of a sport are inactive
+        """
+        logger.debug(f"Checking inactive status for sport ID: {sport_id}")
+        try:
+            # query = "SELECT COUNT(*) FROM events WHERE sport_id=%s AND active=1"
+            filters = f"sport_id={sport_id} AND active=True"
+            active_event_count = self.select_data_where(select='COUNT(*)', table="events", where=filters)
+            print(active_event_count)
+            
+            if active_event_count[0] == 0:
+                logger.info(f"Sport ID {sport_id} should be marked as inactive due to no active events")
+                return False
+        
+        except Exception as e:
+            logger.error(f"Error checking sport inactive status: {e}")
+        finally:
+            return True
+

@@ -33,6 +33,7 @@ def app():
 
 @pytest.fixture
 def client(app):
+    app.testing = True
     return app.test_client()
 
 @pytest.fixture
@@ -43,8 +44,8 @@ def test_delete_sport(client):
     response = client.delete("/sport/1", json={"name":"Rugby"})
     assert response.status_code == 200
 
-def test_create_new_sport(client):
-    client.delete("/sport/1", json={"name":"Rugby"})
+def test_create_new_sport(client, sports_views):
+    _,_ = sports_views.delete_sport(sport_id=1, data={"name":"Rugby"})
 
     body = {
     "name": "Rugby",
@@ -52,8 +53,9 @@ def test_create_new_sport(client):
     "active": True
     }
     
-    response = client.post("/sport/", json=body)
-    assert response.status_code == 201
+    status_code, message  = sports_views.create_sport(body)
+    assert status_code == 201
+    assert isinstance(message, int)
 
 # def test_create_sport_missing_name(client):
 #     data = {
