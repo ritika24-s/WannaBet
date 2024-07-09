@@ -1,4 +1,6 @@
 import pytest
+from sportspro.db import DB
+import json
 
 events = [
     {
@@ -40,6 +42,22 @@ events = [
 ]
 
 @pytest.fixture
+def init_database():
+    # Initialize the database and create some initial test data
+    db = DB()
+    db.create_all()
+
+    # Insert initial data for testing
+    db.execute_query(
+        "INSERT INTO events (name, slug, active, type, sport, status, scheduled_start, actual_start, logos) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        ("Test Event 1", "test-event-1", True, "type1", "sport1", "scheduled", "2023-07-01 10:00:00", None, "logo1.png")
+    )
+    
+    yield db
+
+    # Drop all tables after tests
+    db.drop_all()
+
 def test_create_new_event():
     event = {
     "name": "Chelsea vs Manchester United",
@@ -70,3 +88,44 @@ def test_search_event():
     "sport": "Football",
     "status": "PENDING"
 }
+def test_create_event(client, init_database):
+    response = client.post("/events/", json={
+        "name": "Event 2",
+        "slug": "event-2",
+        "active": True,
+        "type": "type2",
+        "sport": "sport2",
+        "status": "scheduled",
+        "scheduled_start": "2023-07-01 10:00:00",
+        "actual_start": None,
+        "logos": "logo2.png"
+    })
+    assert response.status_code == 201
+    assert "id" in response.get_json()
+
+def test_update_event(client, init_database):
+    response = client.patch("/events/1", json={
+        "name": "Updated Event 1",
+        "slug": "updated-event-1",
+        "active": False,
+        "type": "type1",
+        "sport": "sport1",
+        "status": "completed",
+        "scheduled_start": "2023-07-01 10:00:00",
+        "actual_start": "2023-07-01 12:00:00",
+        "logos": "updated_logo1.png"
+    })
+    assert response.status_code == 200
+    assert "id" in response.get_json()
+
+def test_search_events(client, init_database):
+    response = client.post("/events/search", json={"name": "Test Event"})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "events" in data
+    assert len(data["events"]) > 0
+
+def test_delete_event(client, init_database):
+    response = client.delete("/events/1")
+    # assert response.status_code ==
+

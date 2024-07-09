@@ -94,3 +94,14 @@ def get_all_sports():
         return jsonify({"sports": sports}), 200
     except Exception as e:
         abort(500, str(e))
+
+# Endpoint to update status of sports
+@sports_bp.route('/status/<int:sport_id>', methods=["PUT"])
+def check_and_update_status_sport(sport_id):
+    try:
+        active_status, status_code = sports_views.check_and_update_sport_inactive_status(sport_id=sport_id)
+        if status_code == 200:
+            return jsonify({"active_status": active_status}), 200
+        abort(f"Status couldnt be updated for {sport_id}", status_code)
+    except Exception as e:
+        abort(500, str(e))

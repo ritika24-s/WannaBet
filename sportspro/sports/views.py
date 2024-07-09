@@ -133,15 +133,35 @@ class SportsViews:
             return status_code, message
         
         filters = "1=1"
+        # manually checking filters to avoid SQL injection issues
         if "name" in data:
-            filters += " AND name LIKE '%%%s%%'" % data["name"]
+            filters += " AND name like '%" + data["name"] + "%'"
         if "active" in data:
             filters += " AND active=%d" % data['active']
+        if 'name_regex' in filters:
+            filters += " AND name REGEXP '" + data["name_regex"] + "'"
+        if 'min_active_events' in filters:
+            filters += " AND (SELECT COUNT(*) FROM events WHERE sport_id=%d AND active=True) >= %d" \
+            % (data["sport_id"], data['min_active_events'])
 
-        results = self.sports_db.search_sports(filters=filters)
+        results = self.sports_db.search_sports(filters=filters, fetchone=False)
         if results:
             logger.info("Sports found: %s", results)
             return 200, results
         else:
             logger.warning("No sports match the criteria: %s", data)
             return 404, "No sport matches the criteria"
+    
+    def check_and_update_sport_inactive_status(self, sport_id):
+        sport_active_status = self.sports_db.search_sports(filters="id=%d AND active=True" %sport_id)
+        
+        if not self.sports_db.check_sport_active_status(sport_id=sport_id) and sport_active_status:
+            results = self.sports_db.update_sport(sport_id=sport_id, data={"active":False})
+            if results:
+                logger.info("Sports updated: %s", results)
+                return 200, False
+            else:
+                logger.error("Failed to update sport ID %d"% sport_id)
+                return 500, f"Failed to update sport ID {sport_id}"
+        return 200, True
+

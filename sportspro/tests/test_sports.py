@@ -5,6 +5,8 @@ from sportspro.sports.models import SportsModels
 from sportspro.sports.views import SportsViews
 from sportspro import create_app
 from ..config import *
+from ..sports.routes import sports_bp
+
 
 sports = [
     {
@@ -28,13 +30,18 @@ sports = [
 def app():
     app = create_app()
     app.config.from_object(DevelopmentConfig)
-    
+    # # and register blueprints
+    # app.register_blueprint(sports_bp)
     return app
 
 @pytest.fixture
 def client(app):
-    app.testing = True
-    return app.test_client()
+    app.config["TESTING"] = True
+
+    # return app.test_client()
+    with app.app_context():
+        yield app.test_client()
+
 
 @pytest.fixture
 def sports_views():

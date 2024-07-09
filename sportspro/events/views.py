@@ -84,12 +84,36 @@ class EventsViews:
         
         filters = "1=1"
 
-        if data.get('sport'):
+        # Handling simple filters
+        if 'slug' in data:
+            filters += " AND slug LIKE '%" + data['slug'] + "%'"
+        if 'active' in data:
+            filters += f" AND active = {data['active']}"
+        if 'type' in data:
+            filters += f" AND type LIKE '%" + data['type'] + "%'"
+        if 'sport' in data:
             filters += " AND sport like '%" + data["sport"] + "%'"
-        if data.get('status'):
+        if 'status' in data:
             filters += ' AND status=' + str(data['status'])
+        if 'actual_start' in data:
+            filters += " AND actual_start = %s" % data['actual_start']
+        if 'logos' in data:
+            filters += " AND logos LIKE '%" + data["logos"] + "%'"
 
-        results = self.events_db.search_events(filters=filters, fetchone=False)
+        # Regex filter for name
+        if 'name_regex' in filters:
+            filters += " AND name REGEXP '" + data['name_regex'] + "'"
+
+        # Minimum number of active selections data
+        if 'min_active_selections' in data:
+            filters += " AND (SELECT COUNT(*) FROM selections WHERE event_id=%d AND active = 1) >= %d" \
+                        % (data["event_id"], data['min_active_events'])
+
+        # Events scheduled to start in a specific timeframe
+        if 'scheduled_start_from' in data and 'scheduled_start_to' in data:
+            filters += " AND scheduled_start BETWEEN %s AND %s" \
+                % (data['scheduled_start_from'], data['scheduled_start_to'])
+
         if results:
             return 200, results
         

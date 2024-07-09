@@ -25,15 +25,25 @@ class SportsValidator:
 
     @staticmethod
     def validate_sport_filters(data):
-        if not data:
-            return (400, "Body not provided correctly")
+        # UNCOMMENT if srach request body cant be empty
 
-        if "name" not in data and "active" not in data:
-            return (400, "Incorrect filters provided")
+        # if not data:
+        #     return (400, "Body not provided correctly")
 
-        if not isinstance(data["name"], str) or \
+        # if "name" not in data and "active" not in data:
+        #     return (400, "Incorrect filters provided")
+
+        if not isinstance(data.get("name",""), str) or \
             not isinstance(data.get("active", False), bool):
             return (400, "Incorrect datatypes provided for one or more values")
+
+        if "min_active_events" in data != "sport_id" in data:
+            return (400, "Incorrect filters provided, min_active_events should be paired with sport_id")
+        
+        if not isinstance(data.get("min_active_events", 0), int) or \
+            not isinstance(data.get("sport_id", 0), int):
+            return (400, "Incorrect datatypes provided for one or more values")
+        
         
 class EventsValidator:
     def __init__(self) -> None:

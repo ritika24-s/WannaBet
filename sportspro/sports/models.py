@@ -120,7 +120,7 @@ class SportsModels(DB):
         finally:
             return results
         
-    def check_sport_inactive_status(self, sport_id):
+    def check_sport_active_status(self, sport_id):
         """
         Check if all events of a sport are inactive
         """

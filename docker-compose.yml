@@ -1,19 +1,35 @@
 version: '3.8'
 
 services:
-  web:
+  app:
     build: .
+    container_name: sportspro_app
+    restart: always
+    env_file:
+      - .env
     ports:
       - "5000:5000"
     depends_on:
       - db
-  db:
-    image: mysql:5.7
-    restart: always
     environment:
-      MYSQL_DATABASE: 'sportsdb'
-      MYSQL_USER: 'root'
-      MYSQL_PASSWORD: 'password'
-      MYSQL_ROOT_PASSWORD: 'password'
+      FLASK_ENV: development
+      SECRET_KEY: "asdff"
+      DEBUG: True
+      FLASK_APP: sports_info.py
+
+  db:
+    image: mysql:8.0
+    container_name: sportspro_db
+    restart: always
+    environment:   
+      MYSQL_DATABASE_HOST: "127.0.0.1"
+      MYSQL_DATABASE_USER: 'root'
+      MYSQL_DATABASE_PASSWORD: 'password'
+      MYSQL_MASTER_SCHEMA: 'dev'
     ports:
-      - "330
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

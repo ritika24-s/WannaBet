@@ -118,6 +118,8 @@ class DB(object):
         cursor = None
 
         try:
+            if values and not isinstance(values, tuple):
+                values = tuple(values)
             self.reconnect()
             cursor = self._sql_db.cursor()
             cursor.execute(query, values)
