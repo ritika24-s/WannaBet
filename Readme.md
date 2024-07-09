@@ -35,4 +35,8 @@ To run the flask application, follow these steps:
     MYSQL_DATABASE_USER='root'
     MYSQL_DATABASE_PASSWORD='password'
     MYSQL_MASTER_SCHEMA='dev'
+3. build and run Docker containers
+    docker-compose up --build
+4. Initialize the Database
+    docker exec -it sportspro_app python db/init_db.py
 
