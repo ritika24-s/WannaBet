@@ -107,7 +107,7 @@ class SportsViews:
         
         if sport_exists:
             results = self.sports_db.delete_sport(field, value)
-            logger.info("Sport deleted with ID: %d", sport_id)
+            logger.info("Sport deleted with %s: %s", field, value)
             return 200, sport_id
         else:
             logger.warning("Sport with ID %d does not exist", sport_id)

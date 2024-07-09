@@ -12,6 +12,9 @@ class SportsModels(DB):
         pass
 
     def create_sport(self, name, slug, active):
+        """
+        Create a new sport in the database.
+        """
         logger.debug(f"Creating sport with name: {name}, slug: {slug}, active: {active}")
 
         query = "INSERT INTO sports (name, slug, active) VALUES (%s, %s, %s);"
@@ -20,7 +23,7 @@ class SportsModels(DB):
         try:
             results = self.execute_query(query=query, values=values)
             if results:
-                logger.info(f"Sport created successfully: {name} and id {results}")
+                logger.info(f"Sport created successfully: {name} with ID {results}")
             else:
                 logger.debug(f"No values returned after trying to create: {name}")
                 
@@ -30,6 +33,9 @@ class SportsModels(DB):
             return results
     
     def update_sport(self, sport_id, data):
+        """
+        Update an existing sport in the database.
+        """
         logger.debug(f"Updating sport with ID: {sport_id}")
 
         query = "UPDATE sports SET "
@@ -37,28 +43,26 @@ class SportsModels(DB):
         results = None
 
         try:
-            if data.get('name'):
-                query += "name = %s"
+            if 'name' in data:
+                query += "name = %s, "
                 values.append(data['name'])
-            if data.get("slug"):
-                query += "slug = %s"
+            if 'slug' in data:
+                query += "slug = %s, "
                 values.append(data['slug'])
-            if data.get("active") is not None:
-                query += "active = %s"
+            if 'active' in data:
+                query += "active = %s, "
                 values.append(data['active'])
 
-            if values:
-                query += "WHERE id=%d"
-                values.append(int(sport_id))
+            # Remove the last comma and space
+            query = query.rstrip(', ')
+            query += " WHERE id=%d"
+            values.append(int(sport_id))
 
-                results = self.execute_query(query=query, values=values)
-                if results:
-                    logger.info(f"Sport updated successfully: ID {sport_id}")
-                else:
-                    logger.debug(f"No values returned after trying to update: ID {sport_id}")
+            results = self.execute_query(query=query, values=values)
+            if results:
+                logger.info(f"Sport updated successfully: ID {sport_id}")
             else:
-                logger.debug(f"No values provided to update: ID {sport_id}")
-        
+                logger.debug(f"No values returned after trying to update: ID {sport_id}")
         except Exception as e:
             logger.error(f"Error updating sport: {e}")
         
@@ -66,6 +70,9 @@ class SportsModels(DB):
             return results
 
     def search_sports(self, filters, fetchone=True):
+        """
+        Search for sports in the database based on provided filters.
+        """
         logger.debug(f"Searching for sports with filters: {filters}")
         results = []
         try:
@@ -81,6 +88,9 @@ class SportsModels(DB):
             return results
     
     def delete_sport(self, field, value):
+        """
+        Delete a sport from the database based on the provided field and value.
+        """
         results = None
         logger.debug(f"Deleting sports with {field}: {value}")
 
@@ -98,6 +108,6 @@ class SportsModels(DB):
                 logger.debug(f"No values returned after trying to delete {field}: {value}")
             
         except Exception as e:
-            logger.error(f"Error searching sports: {e}")
+            logger.error(f"Error deleting sport: {e}")
         finally:
             return results
