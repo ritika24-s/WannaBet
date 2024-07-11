@@ -5,30 +5,7 @@ from sportspro.db import DB
 
 logger = get_logger(__name__)
 
-@pytest.fixture(scope="module")
-def db():
-    # Initialize the database and create some initial test data
-    db = DB()
-
-    # # Insert initial data for testing
-    # db.execute_query(
-    #     query="INSERT INTO sports (name, slug, active) VALUES (%s, %s, %s)",
-    #     values=("Chess", "chess", True)
-    # )
-    # delete data before tests
-    db.execute_query("DELETE from sports;")
-    db.execute_query("ALTER TABLE sports AUTO_INCREMENT = 1;")
-       
-    yield db
-
-    # # delete data after tests
-    # db.execute_query("DELETE FROM sports;")
-    # db.execute_query("ALTER TABLE sports AUTO_INCREMENT = 1;")
-
-    
-
-
-def test_create_sport(client, db):
+def test_create_sport(client):
     """
     Test creating a new sport.
     """

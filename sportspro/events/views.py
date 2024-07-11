@@ -117,7 +117,6 @@ class EventsViews:
             if data.get("active") is None:
                 # Check if the event should be marked as inactive
                 data["active"] = self.events_db.check_event_active_status(event_name=event[0][1])
-                print("active ", data["active"])
 
             # convert scheduled_start and actual start to datetime
             if "scheduled_start" in data and not isinstance(data["scheduled_start"], datetime):

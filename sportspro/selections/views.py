@@ -1,3 +1,5 @@
+import traceback
+
 from .models import SelectionsModels
 from ..utils.validators import SelectionsValidator
 from ..utils.logger import get_logger
@@ -50,7 +52,14 @@ class SelectionsViews:
         
         selection_id = self.selections_db.create_selection(data)
         if selection_id:
+            logger.info("Selection created with ID: %d", selection_id)
             return 201, selection_id
+        
+        else:
+            logger.error("Failed to create selection: %s", data)
+            traceback.print_exec()
+            return 500, "Internal Server Error"
+
     
     def update_selection(self, selection_id, data):
         status_code, message = SelectionsValidator.validate_selectionid(selection_id=selection_id)

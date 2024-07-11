@@ -10,12 +10,14 @@ class CreateSchema(DB):
     # def __init__(self):
     #     super().__init__()
 
-    def del_db(self):
-        """
-        Function to delete databases. Only for testing purposes.
-        Please dont call from anywhere else.
-        """
-        self.execute_query("DROP TABLE selections; DROP TABLE events; DROP TABLE sports;")
+    # def del_db(self):
+    #     """
+    #     Function to delete databases. Only for testing purposes.
+    #     Please dont call from anywhere else.
+    #     """
+    #     self.execute_query("DROP TABLE selections;")
+    #     self.execute_query("DROP TABLE events;")
+    #     self.execute_query("DROP TABLE sports;")
 
     def init_db(self):
         self.reconnect()

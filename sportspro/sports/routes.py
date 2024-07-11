@@ -104,7 +104,7 @@ def get_all_sports():
 def check_and_update_status_sport(sport_name):
     try:
         status_code, active_status = sports_views.check_and_update_sport_inactive_status(sport_name=sport_name)
-        print(active_status, status_code)
+
         if status_code == 200:
             return jsonify({"active_status": active_status}), 200
         if status_code>=400:

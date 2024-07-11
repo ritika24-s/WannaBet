@@ -2,7 +2,6 @@ import pytest
 import json
 
 from ..utils.logger import get_logger
-from sportspro.db import DB
 
 logger = get_logger(__name__)
 
@@ -45,31 +44,8 @@ events = [
     }
 ]
 
-@pytest.fixture(scope="module")
-def db():
-    # Initialize the database and create some initial test data
-    db = DB()
 
-    # delete data before tests
-    db.execute_query("DELETE from events;")
-    db.execute_query("ALTER TABLE events AUTO_INCREMENT = 1;")
-
-    # Insert initial data for testing
-    db.execute_query(
-        "INSERT INTO events (name, slug, active, type, sport, status, scheduled_start, actual_start, logos) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        ("Arsenal vs Leeds", "arsenal-vs-leeds", True, "preplay", "Football", "PENDING", "2023-07-01 10:00:00", None, None)
-    )
-    
-    yield db
-
-    # delete data after tests
-    db.execute_query("DELETE from events;")
-    
-
-
-
-
-def test_create_event(client, db):
+def test_create_event(client):
     data = {
         "name": "Chelsea vs Manchester United",
         "slug": "chelsea-vs-manchester-united",
