@@ -40,12 +40,13 @@ To run the flask application, follow these steps:
     ```
 3. build and run Docker containers
     docker-compose up --build
-4. Initialize the Database
+### To Initialize the Database
     ```bash
-    docker exec -it sportspro_app python db/init_db.py
+    docker exec -it sportspro_app python sportspro/db/init_db.py
     ```
+    This command is not required to run, as db is initialized in test cases
 
-To run test cases - 
+### To run test cases - 
 ```python
 pytest .\sportspro\tests
   ```

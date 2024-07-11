@@ -12,6 +12,8 @@ def db(app):
     DB fixture to reset DB for testing
     """
     # Initialize the database and create some initial test data
+    init_db = CreateSchema()
+    init_db.init_db()
     db = DB()
 
     # delete data before tests
