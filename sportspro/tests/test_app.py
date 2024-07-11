@@ -10,6 +10,7 @@ def app():
     app = create_app()
     app.config.from_object(DevelopmentConfig)
     create_schema = CreateSchema()
+    create_schema.del_db()
     create_schema.init_db()
 
     return app

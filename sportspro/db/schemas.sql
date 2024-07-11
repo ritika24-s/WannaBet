@@ -9,27 +9,25 @@ CREATE TABLE IF NOT EXISTS sports (
 -- events table
 CREATE TABLE IF NOT EXISTS events (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     slug VARCHAR(255) NOT NULL UNIQUE,
     active BOOLEAN NOT NULL,
-    type VARCHAR(255) NOT NULL, --  ENUM('preplay', 'inplay') 
-    sport_id INT NOT NULL,
+    type ENUM('preplay', 'inplay') DEFAULT "preplay" NOT NULL,
     sport VARCHAR(255) NOT NULL,
-    status ENUM('Pending', 'Started', 'Ended', 'Cancelled') DEFAULT 'Pending' NOT NULL,
+    status ENUM("PENDING", "STARTED", "ENDED", "CANCELLED") DEFAULT 'PENDING' NOT NULL,
     scheduled_start DATETIME NOT NULL,
     actual_start DATETIME DEFAULT NULL,
     logos VARCHAR(511) DEFAULT NULL,
-    FOREIGN KEY (sport_id) REFERENCES sports(id)
+    FOREIGN KEY (sport) REFERENCES sports(name)
 );
 
 -- selections table
 CREATE TABLE IF NOT EXISTS selections (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    event_id INT NOT NULL,
     event VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    active BOOLEAN NOT NULL,
-    outcome ENUM('Unsettled', 'Void', 'Lose', 'Win') NOT NULL,
-    FOREIGN KEY (event_id) REFERENCES events(id)
+    active BOOLEAN DEFAULT False,
+    outcome ENUM('UNSETTLED', 'VOID', 'LOSE', 'WIN') NOT NULL,
+    FOREIGN KEY (event) REFERENCES events(name)
 );

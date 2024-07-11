@@ -1,5 +1,9 @@
 from .models import SelectionsModels
 from ..utils.validators import SelectionsValidator
+from ..utils.logger import get_logger
+
+logger = get_logger("selection_views")
+
 
 class SelectionsViews:
     def __init__(self) -> None:
@@ -8,6 +12,25 @@ class SelectionsViews:
     def get_selection_list(self):
         pass
 
+    def get_selections_data(self, results):
+        """
+        Get selections dict from the provided search results.
+        """
+        selections = []
+
+        for result in results:
+            selection = {
+                "id": result[0],
+                "name": result[1],
+                "event_id": result[2],
+                "active": bool(result[3]),
+                "odds": result[4],
+                "outcome": result[5]
+            }
+            selections.append(selection)
+        
+        return selections
+        
     def check_selection_exists(self, data):
         if "selection_id" in data:
             filters = "id=%d" % (int(data["selection_id"]))
@@ -39,9 +62,9 @@ class SelectionsViews:
             return status_code, message
         
         if self.check_selection_exists({"selection_id":selection_id}):
-            selection_id = self.selections_db.update_selection(selection_id=selection_id, data=data)
+            results = self.selections_db.update_selection(selection_id=selection_id, data=data)
             
-            if selection_id:
+            if results:
                 return 200, selection_id
             return 500, "Something went wrong, check logs"
         
@@ -73,9 +96,15 @@ class SelectionsViews:
             filters += " AND event like '%" + data["event"] + "%'"
         if data.get('active'):
             filters += ' AND active=' + str(data['active'])
+        if data.get('outcome'):
+            filters += ' AND outcome=' + str(data['outcome'])
 
         results = self.selections_db.search_selections(filters=filters)
-        if results:
-            return 200, results
         
+        if results:
+            selections = self.get_selections_data(results=results)
+            logger.info("Selection found: %s", len(selections))
+            return 200, selections
+        
+        logger.warning("No selection match the criteria: %s", data)
         return 404, "No selection matches the criteria"

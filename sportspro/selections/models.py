@@ -17,7 +17,7 @@ class SelectionsModels(DB):
             query = "INSERT INTO selections (name, event, active, price, outcome) VALUES (%s, %s, %s, %s, %s)" 
             values = (data['name'], data['event'], data.get('active', False), data['price'], data['outcome'])
 
-            results = self.execute_query(query=query, values=values)
+            results = self.execute_query(query=query, values=values, insert=True)
             if results:
                 logger.info(f"Selection created successfully: {data['name']} with id:{results} for event: {data['event']}")
             else:
@@ -28,41 +28,38 @@ class SelectionsModels(DB):
             return results
 
     def update_selection(self, selection_id, data):
-        logger.debug(f"Updating selection with ID: {selection_id} for event: {data['event']}")
-
-        query = "UPDATE selections SET "
-        values = []
-        results = None
-        
+        logger.debug(f"Updating selection with ID: {selection_id}")
         try:
-            if data.get('name'):
-                query += "name = %s"
-                values.append(data['name'])
-            if data.get("event"):
-                query += "event = %s"
-                values.append(data['event'])
-            if data.get("active") is not None:
-                query += "active = %s"
-                values.append(data['active'])
-            if data.get("price") is not None:
-                query += "price = %s"
-                values.append(data['price'])
-            if data.get("outcome") is not None:
-                query += "outcome = %s"
-                values.append(data['outcome'])
+            query = "UPDATE selections SET "
+            values = []
+            results = None
+            query_parts = []
 
-            if values:
-                query += "WHERE id=%d"
-                values.append(int(selection_id))
 
-                results = self.execute_query(query=query, values=values)
+            if "name" in data:
+                query_parts.append("name = '%" + data["name"] + "%'")
+            if "event" in data:
+                query_parts.append("event = '%" + data["event"] + "%'")
+            if "active" in data:
+                query_parts.append("active = " + str(data["active"]))
+            if "price" in data:
+                query_parts.append("price = " + str(data["price"]))
+            if "outcome" in data:
+                query_parts.append("outcome = '%" + data["outcome"] + "%'")
+
+            if query_parts:
+                query += ", ".join(query_parts) + " WHERE id = %d" % selection_id
+                # query = query[1:]
+                logger.debug(f"Query: {query}")
+
+                results = self.execute_query(query=query)
                 if results:
                     logger.info(f"Selection created successfully: {data['name']} with id:{results}")
                 else:
                     logger.debug(f"No values returned after trying to update: ID {selection_id}")
             else:
                 logger.debug(f"No values provided to update: ID {selection_id}")
-            
+                
         except Exception as e:
             logger.error(f"Error updating selection: {e}")
         finally:

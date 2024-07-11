@@ -23,15 +23,15 @@ def create_new_sport():
         status_code, message = sports_views.create_sport(data=request.get_json())
         if status_code == 201:
             return jsonify({"id": int(message)}), 201
-        else:
-            abort(status_code, str(message))
+        if status_code>=400:
+            return jsonify({"error_message": message}), status_code
     
     except Exception as e:
         logger.error(f"Error creating new sport: {e}")
         abort(500, "Internal Server Error")
 
 # Endpoint to update or delete an existing sport
-@sports_bp.route('/<int:sport_id>', methods=["PATCH", "DELETE"])
+@sports_bp.route('/<int:sport_id>', methods=["PATCH", "PUT", "DELETE"])
 def update_sport(sport_id):
     """
     Update or delete an existing sport.
@@ -39,22 +39,23 @@ def update_sport(sport_id):
     DELETE: Deletes the specified sport.
     """
     try:
-        if not request.get_json():
-            abort(400, "Invalid input: No data provided")
-
         if request.method == "DELETE":
             message, status_code = sports_views.delete_sport(sport_id=int(sport_id), data=request.get_json())
 
             if status_code == 200:
                 return jsonify({'id':sport_id}), 200
-            abort(status_code, str(message))
+            if status_code>=400:
+                return jsonify({"error_message": message}), status_code
         
         else:
-            status_code, message = sports_views.update_sport(sport_id, request.get_json())
+            if not request.get_json():
+                abort(400, "Invalid input: No data provided")
+
+            status_code, message = sports_views.update_sport(sport_id=int(sport_id), data=request.get_json())
             if status_code == 200:
                 return jsonify({"id": int(sport_id)}), 200
-            else:
-                abort(status_code, str(message))
+            if status_code>=400:
+                return jsonify({"error_message": message}), status_code
 
     except ValueError as e:
         logger.error(f"ValueError: {e}")
@@ -75,12 +76,12 @@ def search_particular_sport():
     """
     try:
         if not request.get_json():
-            abort(400, "Invalid input: No data provided")
+            return jsonify({"error_message": "Invalid input: No data provided"}), 400
             
-        sports = sports_views.search_sport(request.get_json())
+        status_code, sports = sports_views.search_sport(request.get_json(force=True))
         if sports:
             return jsonify({"sports": sports}), 200
-        abort(404, "No data found for the given filters")
+        return jsonify({"error_message": "No data found for the given filters"}), 404
     
     except Exception as e:
         logger.error(f"Error searching for sports: {e}")
@@ -91,17 +92,24 @@ def search_particular_sport():
 def get_all_sports():
     try:
         sports = sports_views.get_sports_list()
-        return jsonify({"sports": sports}), 200
+
+        if sports:
+            return jsonify({"sports": sports}), 200
+        return jsonify({"error_message": "No sports exists yet"}), 404
     except Exception as e:
         abort(500, str(e))
 
 # Endpoint to update status of sports
-@sports_bp.route('/status/<int:sport_id>', methods=["PUT"])
-def check_and_update_status_sport(sport_id):
+@sports_bp.route('/status/<sport_name>', methods=["PUT"])
+def check_and_update_status_sport(sport_name):
     try:
-        active_status, status_code = sports_views.check_and_update_sport_inactive_status(sport_id=sport_id)
+        status_code, active_status = sports_views.check_and_update_sport_inactive_status(sport_name=sport_name)
+        print(active_status, status_code)
         if status_code == 200:
             return jsonify({"active_status": active_status}), 200
-        abort(f"Status couldnt be updated for {sport_id}", status_code)
+        if status_code>=400:
+            return jsonify({"error_message": f"Status couldnt be updated for {sport_name}"}), status_code
+        
+        abort(status_code, f"Status couldnt be updated for {sport_name}")
     except Exception as e:
         abort(500, str(e))

@@ -1,14 +1,20 @@
 import pytest
 from sportspro import create_app
+from sportspro.db.init_db import CreateSchema
 
+@pytest.fixture(scope="module")
+def app():
+    app = create_app()
+    app.config["TESTING"] = True
+    db = CreateSchema()
+    db.init_db()
+
+    return app
 
 @pytest.fixture(scope='module')
-def test_client():
-    flask_app = create_app()
-    flask_app.config["TESTING"] = True
+def client(app):
+    return app.test_client()
 
-    # Flask provides a way to test your application by exposing the Werkzeug test Client 
-    # and handling the context locals for you.
-    with flask_app.test_client() as testing_client:
-        with flask_app.app_context():
-            yield testing_client
+@pytest.fixture(scope='module')
+def runner(app):
+    return app.test_cli_runner()

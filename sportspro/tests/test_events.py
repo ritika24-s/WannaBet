@@ -1,6 +1,10 @@
 import pytest
-from sportspro.db import DB
 import json
+
+from ..utils.logger import get_logger
+from sportspro.db import DB
+
+logger = get_logger(__name__)
 
 events = [
     {
@@ -41,91 +45,116 @@ events = [
     }
 ]
 
-@pytest.fixture
-def init_database():
+@pytest.fixture(scope="module")
+def db():
     # Initialize the database and create some initial test data
     db = DB()
-    db.create_all()
+
+    # delete data before tests
+    db.execute_query("DELETE from events;")
+    db.execute_query("ALTER TABLE events AUTO_INCREMENT = 1;")
 
     # Insert initial data for testing
     db.execute_query(
         "INSERT INTO events (name, slug, active, type, sport, status, scheduled_start, actual_start, logos) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        ("Test Event 1", "test-event-1", True, "type1", "sport1", "scheduled", "2023-07-01 10:00:00", None, "logo1.png")
+        ("Arsenal vs Leeds", "arsenal-vs-leeds", True, "preplay", "Football", "PENDING", "2023-07-01 10:00:00", None, None)
     )
     
     yield db
 
-    # Drop all tables after tests
-    db.drop_all()
-
-def test_create_new_event():
-    event = {
-    "name": "Chelsea vs Manchester United",
-    "slug": "chelsea-vs-manchester-united",
-    "active": True,
-    "type": "preplay",
-    "sport": "Football",
-    "status": "PENDING",
-    "scheduled_start": "2024-07-04T15:00:00Z",
-    "logos": "link_7|link_8"
-}
+    # delete data after tests
+    db.execute_query("DELETE from events;")
     
-def test_update_event():
-    event ={
-    "name": "Chelsea vs Manchester United",
-    "slug": "chelsea-vs-manchester-united",
-    "active": True,
-    "type": "preplay",
-    "sport": "Football",
-    "status": "STARTED",
-    "scheduled_start": "2024-07-04T15:00:00Z",
-    "actual_start": "2024-07-04T15:05:00Z",
-    "logos": "link_7|link_8"
-}
 
-def test_search_event():
-    search = {
-    "sport": "Football",
-    "status": "PENDING"
-}
-def test_create_event(client, init_database):
-    response = client.post("/events/", json={
-        "name": "Event 2",
-        "slug": "event-2",
+
+
+
+def test_create_event(client, db):
+    data = {
+        "name": "Chelsea vs Manchester United",
+        "slug": "chelsea-vs-manchester-united",
         "active": True,
-        "type": "type2",
-        "sport": "sport2",
-        "status": "scheduled",
-        "scheduled_start": "2023-07-01 10:00:00",
-        "actual_start": None,
-        "logos": "logo2.png"
-    })
+        "type": "preplay",
+        "sport": "Football",
+        "status": "PENDING",
+        "scheduled_start": "2024-07-04T15:00:00Z",
+     }
+    logger.debug("Starting test_create_event")
+
+    response = client.post("/event/", json=data)
+    logger.debug(f"Response status code: {response.status_code}, Response data: {response.data}")
     assert response.status_code == 201
     assert "id" in response.get_json()
 
-def test_update_event(client, init_database):
-    response = client.patch("/events/1", json={
-        "name": "Updated Event 1",
-        "slug": "updated-event-1",
-        "active": False,
-        "type": "type1",
-        "sport": "sport1",
-        "status": "completed",
-        "scheduled_start": "2023-07-01 10:00:00",
-        "actual_start": "2023-07-01 12:00:00",
-        "logos": "updated_logo1.png"
-    })
+def test_update_event(client):
+    """
+    Test updating an existing event.
+    """
+    logger.debug("Starting test_update_event")
+
+    updated_data = {
+        "logos": "|"
+        }
+    
+    response = client.put("/event/2", json=updated_data, content_type='application/json')
+    logger.debug(f"Response status code: {response.status_code}, Response data: {response.data}")
     assert response.status_code == 200
     assert "id" in response.get_json()
 
-def test_search_events(client, init_database):
-    response = client.post("/events/search", json={"name": "Test Event"})
+def test_update_event_with_wrong_status(client):
+    """
+    Test updating an existing event with value outside ENUM
+    """
+    logger.debug("Starting test_update_event")
+
+    updated_data = {
+        "status": "completed"
+        }
+    
+    response = client.patch("/event/1", json=updated_data, content_type='application/json')
+    logger.debug(f"Response status code: {response.status_code}, Response data: {response.data}")
+    assert response.status_code == 400
+    assert "error_message" in response.get_json()
+    assert response.get_json()["error_message"] == "Status value is not acceptable"
+
+def test_search_events(client):
+    """
+    Test searching for event based on filters.
+    """
+    logger.debug("Starting test_search_event")
+    # Create a event for search
+    event_data = {
+        "name": "Real Madrid vs Manchester United",
+        "slug": "real-madrid-vs-manchester-united",
+        "active": True,
+        "type": "inplay",
+        "sport": "Football",
+        "status": "PENDING",
+        "scheduled_start": "2024-07-04T15:00:00Z",
+    }
+    client.post('/event/', json=event_data, content_type='application/json')
+
+    search_data = {
+        "name": "Real Madrid vs Manchester United"
+    }
+    response = client.post("/event/search", json=search_data, content_type='application/json')
+    logger.debug(f"Response status code: {response.status_code}, Response data: {response.data}")
     assert response.status_code == 200
     data = response.get_json()
     assert "events" in data
     assert len(data["events"]) > 0
 
-def test_delete_event(client, init_database):
-    response = client.delete("/events/1")
-    # assert response.status_code ==
+# def test_delete_event(client):
+#     response = client.delete("/event/1")
+#     assert response.status_code == 200
+
+def test_search_event_by_name_regex(client):
+    response = client.post("/event/search", json={"name_regex": "Match.*"})
+    assert response.status_code == 200
+    assert "events" in response.get_json()
+
+def test_search_event_by_timeframe(client):
+    response = client.post("/event/search", json={"scheduled_start_from": "2024-07-01 00:00:00", "scheduled_start_to": "2024-07-31 23:59:59"})
+    assert response.status_code == 200
+    assert "events" in response.get_json()
 

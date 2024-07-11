@@ -21,7 +21,7 @@ class SportsModels(DB):
         values = (name, slug, active)
         results = None
         try:
-            results = self.execute_query(query=query, values=values)
+            results = self.execute_query(query=query, values=values, insert=True)
             if results:
                 logger.info(f"Sport created successfully: {name} with ID {results}")
             else:
@@ -40,7 +40,7 @@ class SportsModels(DB):
 
         query = "UPDATE sports SET "
         values = []
-        results = None
+        results = 0
 
         try:
             if 'name' in data:
@@ -55,10 +55,10 @@ class SportsModels(DB):
 
             # Remove the last comma and space
             query = query.rstrip(', ')
-            query += " WHERE id=%d"
+            query += " WHERE id=%s"
             values.append(int(sport_id))
 
-            results = self.execute_query(query=query, values=values)
+            results = self.execute_query(query=query, values=tuple(values))
             if results:
                 logger.info(f"Sport updated successfully: ID {sport_id}")
             else:
@@ -74,14 +74,19 @@ class SportsModels(DB):
         Search for sports in the database based on provided filters.
         """
         logger.debug(f"Searching for sports with filters: {filters}")
-        results = []
+
         try:
             # cursor = self.connection.cursor(dictionary=True)
-            results = self.select_data_where(select="*", table="sports",
+            result = self.select_data_where(select="*", table="sports",
                                 where=filters,
                                 fetchone=fetchone)
-            logger.info(f"Found {len(results)} sports matching criteria")
             
+            if fetchone:
+                results = [result] if result else []
+            else:
+                results = result
+            logger.info(f"Found {len(results)} sports matching criteria - {results}")
+
         except Exception as e:
             logger.error(f"Error searching sports: {e}")
         finally:
@@ -93,9 +98,9 @@ class SportsModels(DB):
         """
         results = None
         logger.debug(f"Deleting sports with {field}: {value}")
-        query = "DELETE FROM sports WHERE %s=%s;"
+        query = f"DELETE FROM sports WHERE {field}={value};"
         try:
-            results = self.execute_query(query=query, values=(field, value))
+            results = self.execute_query(query=query)
             if results:
                 logger.info(f"Sport deleted successfully with {field}: {value}")
             else:
@@ -120,23 +125,25 @@ class SportsModels(DB):
         finally:
             return results
         
-    def check_sport_active_status(self, sport_id):
+    def check_sport_active_status(self, sport_name):
         """
         Check if all events of a sport are inactive
         """
-        logger.debug(f"Checking inactive status for sport ID: {sport_id}")
+        active = True
+        logger.debug(f"Checking inactive status for : {sport_name}")
         try:
-            # query = "SELECT COUNT(*) FROM events WHERE sport_id=%s AND active=1"
-            filters = f"sport_id={sport_id} AND active=True"
+            # query = "SELECT COUNT(*) FROM events WHERE sport=%s AND active=1"
+            filters = f"sport='{sport_name}' AND active=True"
             active_event_count = self.select_data_where(select='COUNT(*)', table="events", where=filters)
-            print(active_event_count)
             
+            logger.debug(f"Active events found for {sport_name} = {active_event_count[0]}")
+
             if active_event_count[0] == 0:
-                logger.info(f"Sport ID {sport_id} should be marked as inactive due to no active events")
-                return False
+                logger.info(f"Sport {sport_name} should be marked as inactive due to no active events")
+                active = False
         
         except Exception as e:
             logger.error(f"Error checking sport inactive status: {e}")
         finally:
-            return True
+            return active
 

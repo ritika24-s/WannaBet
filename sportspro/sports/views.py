@@ -26,14 +26,22 @@ class SportsViews:
         
         return self.sports_db.search_sports(filters=filters)
     
-    def get_data(self, data):
+    def get_data(self, results):
         """
-        Extract sport data from the provided input.
+        Get sport dict from the provided search results.
         """
-        name = data['name']
-        slug = data.get('slug', "")
-        active = data.get('active', True)
-        return name, slug, active
+        sports = []
+
+        for result in results:
+            sport = {
+                "id": result[0],
+                "name": result[1],
+                "slug": result[2],
+                "active": bool(result[3])
+            }
+            sports.append(sport)
+
+        return sports
     
     def create_sport(self, data):
         """
@@ -46,20 +54,20 @@ class SportsViews:
         if status_code != 200:
             logger.error("Validation failed for creating sport: %s", message)
             return status_code, message
+        
+        if self.check_sport_exists(data=data):
+            logger.warning("Duplicate entry found for sport: %s", data)
+            return 409, "Duplicate entry"
+        
+        sport_id = self.sports_db.create_sport(name=data['name'],
+                                                slug=data.get('slug'),
+                                                active=data.get('active', True))
+        if sport_id:
+            logger.info("Sport created with ID: %d", sport_id)
+            return 201, sport_id
         else:
-            if self.check_sport_exists(data=data):
-                logger.warning("Duplicate entry found for sport: %s", data)
-                return 409, "Duplicate entry"
-            
-            sport_id = self.sports_db.create_sport(name=data['name'],
-                                                   slug=data.get('slug'),
-                                                   active=data.get('active', True))
-            if sport_id:
-                logger.info("Sport created with ID: %d", sport_id)
-                return 201, sport_id
-            else:
-                logger.error("Failed to create sport: %s", data)
-                return 500, "Internal Server Error"
+            logger.error("Failed to create sport: %s", data)
+            return 500, "Internal Server Error"
         
     def update_sport(self, sport_id, data):
         """
@@ -72,23 +80,23 @@ class SportsViews:
             logger.error("Validation failed for sport data: %s", message)
             return status_code, message
         
-        status_code, message = SportsValidator.validate_sports_data(data)
-        if status_code != 200:
-            logger.error("Validation failed for sport data: %s", message)
-            return status_code, message
-        
-        if self.check_sport_exists({"sport_id": sport_id}):
+        # check if the sport exists and if yes then store it in a variable to capture the sport name
+        sport = self.check_sport_exists({"sport_id": sport_id})
+
+        if sport:
             if data.get("active") is None:
                 # Check if the sport should be marked as inactive
-                data["active"] = self.sports_db.check_sport_inactive_status(sport_id)
+                data["active"] = self.sports_db.check_sport_active_status(sport_name=sport[0][1])
                 
             sport_id = self.sports_db.update_sport(sport_id=sport_id, data=data)
+            
+            logger.debug(f"Value received after trying to update sport - {sport_id}")
             
             if sport_id:
                 logger.info("Sport updated with ID: %d", sport_id)
                 return 200, sport_id
             else:
-                logger.error("Failed to update sport ID %d: %s", sport_id, data)
+                logger.error("Failed to update sport ID %s: %s", sport_id, data)
                 return 500, "Something went wrong, check logs"
         
         else:
@@ -127,6 +135,7 @@ class SportsViews:
         Search for sports based on the provided filters.
         """
         logger.debug("Searching for sports with filters: %s", data)
+
         status_code, message = SportsValidator.validate_sport_filters(data)
         if status_code != 200:
             logger.error("Validation failed for search filters: %s", message)
@@ -141,27 +150,35 @@ class SportsViews:
         if 'name_regex' in filters:
             filters += " AND name REGEXP '" + data["name_regex"] + "'"
         if 'min_active_events' in filters:
-            filters += " AND (SELECT COUNT(*) FROM events WHERE sport_id=%d AND active=True) >= %d" \
-            % (data["sport_id"], data['min_active_events'])
-
+            filters += " AND (SELECT COUNT(*) FROM events WHERE sport='%s' AND active=True) >= %d" \
+            % (data["sport"], data['min_active_events'])
+        
         results = self.sports_db.search_sports(filters=filters, fetchone=False)
         if results:
-            logger.info("Sports found: %s", results)
-            return 200, results
-        else:
-            logger.warning("No sports match the criteria: %s", data)
-            return 404, "No sport matches the criteria"
+            sports = self.get_data(results=results)
+            logger.info("Sports found: %s", len(sports))
+            return 200, sports
+
+        logger.warning("No sports match the criteria: %s", data)
+        return 404, "No sport matches the criteria"
     
-    def check_and_update_sport_inactive_status(self, sport_id):
-        sport_active_status = self.sports_db.search_sports(filters="id=%d AND active=True" %sport_id)
+    def check_and_update_sport_inactive_status(self, sport_name):
+        sport_active_status = self.sports_db.search_sports(filters="name='%s' AND active=True" % sport_name, fetchone=True)
+        all_events_status = self.sports_db.check_sport_active_status(sport_name=sport_name)
+
+        sport_id = sport_active_status[0][0]
         
-        if not self.sports_db.check_sport_active_status(sport_id=sport_id) and sport_active_status:
-            results = self.sports_db.update_sport(sport_id=sport_id, data={"active":False})
+        logger.info(f"Sport: {sport_name}, Sport Status: {str(sport_active_status)}, All Events Status: {str(all_events_status)}")
+        
+        if all_events_status != sport_active_status:
+            logger.info(f"Changing the status of {sport_name} to {not all_events_status}")
+        
+            results = self.update_sport(sport_id=sport_active_status[0][0], data={"active":not all_events_status})
             if results:
                 logger.info("Sports updated: %s", results)
                 return 200, False
-            else:
-                logger.error("Failed to update sport ID %d"% sport_id)
-                return 500, f"Failed to update sport ID {sport_id}"
+            
+            logger.error("Failed to update sport ID %d"% sport_id)
+            return 500, f"Failed to update sport ID {sport_id}"
         return 200, True
 

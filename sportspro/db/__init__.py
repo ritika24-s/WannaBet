@@ -97,10 +97,11 @@ class DB(object):
             if fetchone:
                 # if only fetching one entry, then limit the data to 1 to optimize the query return
                 cursor.execute(f"select {select} from {table} where {where} LIMIT 1;")
-                results = [cursor.fetchone()]
+                results = cursor.fetchone()
             else:
                 cursor.execute(f"select {select} from {table} where {where};")
                 results = cursor.fetchall()
+                print("fetchall ", results)
         except mysql.connector.Error as err:
             setup_logger("Got an error while connecting to the MySQL database -" + str(err))
             traceback.print_exc()
@@ -108,6 +109,7 @@ class DB(object):
             # close the cursor and connection
             self.close_cursor(cursor)
             self.close()
+            print("results in main", results)
             return results
 
     def execute_query(self, query, values=None, insert=False):
@@ -120,13 +122,17 @@ class DB(object):
         try:
             if values and not isinstance(values, tuple):
                 values = tuple(values)
+            
             self.reconnect()
             cursor = self._sql_db.cursor()
+            logger.debug(f"Query running - {query} with values {values}")
             cursor.execute(query, values)
-                   
+            
             if insert:
+                logger.debug(f"cursor.lastrowid = {cursor.lastrowid}")
                 results = cursor.lastrowid
             else:
+                logger.debug(f"cursor.rowcount = {cursor.rowcount}")
                 results = cursor.rowcount
             
             self._sql_db.commit()

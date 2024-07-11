@@ -19,6 +19,13 @@ def not_found_error(error):
     response.status_code = 404
     return response
 
+@app.errorhandler(409)
+def not_found_error(error):
+    logger.error(f"409 error: {error}")
+    response = jsonify({'error': 'Dupliacte entry', 'message': str(error)})
+    response.status_code = 409
+    return response
+
 @app.errorhandler(500)
 def internal_server_error(error):
     logger.error(f"500 error: {error}")

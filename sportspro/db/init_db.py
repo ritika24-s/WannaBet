@@ -1,7 +1,7 @@
 import mysql.connector
 from mysql.connector import errorcode
 
-from . import DB
+from sportspro.db import DB
 
 class CreateSchema(DB):
     """
@@ -9,6 +9,13 @@ class CreateSchema(DB):
     """
     # def __init__(self):
     #     super().__init__()
+
+    def del_db(self):
+        """
+        Function to delete databases. Only for testing purposes.
+        Please dont call from anywhere else.
+        """
+        self.execute_query("DROP TABLE selections; DROP TABLE events; DROP TABLE sports;")
 
     def init_db(self):
         self.reconnect()

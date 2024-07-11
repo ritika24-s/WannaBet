@@ -25,7 +25,7 @@ class SportsValidator:
 
     @staticmethod
     def validate_sport_filters(data):
-        # UNCOMMENT if srach request body cant be empty
+        # UNCOMMENT if search request body cant be empty
 
         # if not data:
         #     return (400, "Body not provided correctly")
@@ -35,29 +35,34 @@ class SportsValidator:
 
         if not isinstance(data.get("name",""), str) or \
             not isinstance(data.get("active", False), bool):
-            return (400, "Incorrect datatypes provided for one or more values")
+            return 400, "Incorrect datatypes provided for one or more values"
 
-        if "min_active_events" in data != "sport_id" in data:
-            return (400, "Incorrect filters provided, min_active_events should be paired with sport_id")
+        if "min_active_events" in data != "sport" in data:
+            return 400, "Incorrect filters provided, min_active_events should be paired with sport"
         
         if not isinstance(data.get("min_active_events", 0), int) or \
-            not isinstance(data.get("sport_id", 0), int):
-            return (400, "Incorrect datatypes provided for one or more values")
+            not isinstance(data.get("sport", ""), str):
+            return 400, "Incorrect datatypes provided for one or more values"
         
+        return 200, "Filter data looks good"
         
 class EventsValidator:
     def __init__(self) -> None:
         pass
 
     @staticmethod
-    def validate_events_data(data):
-        if not data or ["name", "type", "sport", "status", "scheduled_start"] in data.keys():
+    def validate_events_data(data, update=False):
+        if not update and not data or ["name", "type", "sport", "status", "scheduled_start"] in list(data.keys()):
             return (400, "Body not provided correctly")
 
-        # if not isinstance(data["name"], str) or \
-        #     not isinstance(data.get("slug", ""), str) or \
-        #         not isinstance(data.get("active", False), bool):
-        #     return (400, "Incorrect datatypes provided for one or more values")
+        if "status" in data and data["status"] not in ["PENDING", "STARTED", "ENDED", "CANCELLED"]:
+            return (400, "Status value is not acceptable")
+        
+        if "type" in data and data["type"] not in ["preplay", "inplay"]:
+            return (400, "Type value is not acceptable")
+        
+        if not isinstance(data.get("sport",""), str):
+            return (400, "Sport should be a string")
         
         return (200, "Data looks good")
 
@@ -78,15 +83,23 @@ class EventsValidator:
         if not isinstance(data["name"], str) or \
             not isinstance(data.get("active", False), bool):
             return (400, "Incorrect datatypes provided for one or more values")
+    
+        if "min_active_selections" in data != "event" in data:
+            return 400, "Incorrect filters provided, min_active_events should be paired with sport"
+        
+        if not isinstance(data.get("min_active_selections", 0), int) or \
+            not isinstance(data.get("event", ""), str):
+            return 400, "Incorrect datatypes provided for one or more values"
 
-
+        return (200, "Data looks good")
+    
 class SelectionsValidator:
     def __init__(self) -> None:
         pass
 
     @staticmethod
     def validate_selections_data(data):
-        if not data or ["name", "event", "price", "outcome"] in data.keys():
+        if not data or ["name", "event", "price", "outcome"] in list(data.keys()):
             return (400, "Body not provided correctly")
 
         # if not isinstance(data["name"], str) or \
@@ -110,7 +123,8 @@ class SelectionsValidator:
         if "name" not in data and "active" not in data:
             return (400, "Incorrect filters provided")
 
-        if not isinstance(data["name"], str) or \
+        if not isinstance(data.get("name",""), str) or \
             not isinstance(data.get("active", False), bool):
             return (400, "Incorrect datatypes provided for one or more values")
         
+        return (200, "Data looks good")
