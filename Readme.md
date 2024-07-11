@@ -1,7 +1,11 @@
+This is a flask application for sportsbook product which is responsible for managing sports, events and selections.
+Currently, the app has no good UI, only a layout template for it.
+
+## Running the application locally
+
 ### Package Download Manager -
 To download libraries, [pip](https://pip.pypa.io/en/stable/) has been used and is advised. 
 Make sure it is installed.
-
 
 ## Create Virtual Environment
 
@@ -12,7 +16,6 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install [virtua
 ```bash
 pip install virtualenv
 ```
-
 
 Check how to setup virtual environment from here - https://virtualenv.pypa.io/en/latest/user_guide.html
 
